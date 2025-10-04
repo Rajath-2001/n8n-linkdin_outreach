@@ -1,0 +1,470 @@
+{
+  "name": "linkdin",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        124
+      ],
+      "id": "154cfb86-8208-4ab2-914f-3baffc488637",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ATdEZq7p1v1EUjMhhXwCWom4iJUthnOP31JN3OT1ywc",
+          "mode": "list",
+          "cachedResultName": "linkdin",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ATdEZq7p1v1EUjMhhXwCWom4iJUthnOP31JN3OT1ywc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ATdEZq7p1v1EUjMhhXwCWom4iJUthnOP31JN3OT1ywc/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Linkdin Connection sent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        124
+      ],
+      "id": "6bd94e50-c904-464a-95f9-dbc302769454",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zAQeNVIFDkpvkCLp",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "linkedinUrl": "={{ $json['Linkdin Url'] }}"
+      },
+      "type": "n8n-nodes-browserflow.browserflow",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "9710a1db-e938-45d2-8bc5-720df4402a1a",
+      "name": "Check if a person is a connection",
+      "credentials": {
+        "browserflowApi": {
+          "id": "6Mmtu4mdSvTDoTaw",
+          "name": "Browserflow account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eb90774c-f27c-47e6-aafe-1278cfb82789",
+              "leftValue": "={{ $json.is_connection }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "162fb359-760f-4be9-9c30-821ed882b5d3",
+              "leftValue": "={{ $json.is_pending }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "71958113-8d3c-4387-8f35-1a39cf5f8bdb",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "getProfileData",
+        "linkedinUrl": "={{ $('Get row(s) in sheet').item.json['Linkdin Url'] }}"
+      },
+      "type": "n8n-nodes-browserflow.browserflow",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "cd4b86b8-f00a-4750-94ff-cf9d1fc1fda3",
+      "name": "Get data from a linkedin profile",
+      "credentials": {
+        "browserflowApi": {
+          "id": "6Mmtu4mdSvTDoTaw",
+          "name": "Browserflow account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<input>\nName:{{ $json.data.name }}\n\nLinkdin Bio:{{ $json.data.about }}\n\nLinkdin Tagline: {{ $json.data.tagline }}\n\n</input>\n\nCreate a personalized Linkdin Connection request message that :\n\n- Mentions a specific detail from the recipient's profile \n(position, company, recent achievement ).\n-Identifies a genuine common interest or industry connection related to AI and automation.\n- Provides a clear reason for connecting, emphasizing the value of exchanging ideas.\n-Keeps the message concise (under 150 characters).\n-Uses a warm, professional tone without generic language or obvious sales pitches.\n\n-Ends with a simple closing.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You create short, concise and accurate LinkedIn connection messages. Your message should sound natural, warm and professional. Always reference specific details fr a person's profile to show genuine interest. Identify common interests, mutual connections, or industry overlaps when possible. Keep messages under 150 characters to respect LinkedIn's limitations. Avoid generic phrases like \"I'd like to add you to my network\" or any obvious sales language. Each message should provide a clear reason for connecting and suggest mutual value. Make the recipient feel that accepting the request would be beneficial to them professionally. Never use overly formal language, jargon, or clichés. Your tone should be friendly but business-appropriate like a brief note you'd write to a respected colleague you're meeting for the first time at a professional conference."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "efc310a1-cab4-4d4f-a3fe-69902a530a3c",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1416,
+        224
+      ],
+      "id": "1a1440bc-f5a3-435c-93f1-dc828c96d173",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "xrwBmNQKoCm5VZg4",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendConnectionInvite",
+        "linkedinUrl": "={{ $('Get row(s) in sheet').item.json['Linkdin Url'] }}",
+        "addMessage": true,
+        "message": "={{ $json.text }}"
+      },
+      "type": "n8n-nodes-browserflow.browserflow",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        0
+      ],
+      "id": "08a71b6a-dd65-40a4-96ca-0fd62ba83a01",
+      "name": "Send a linked in connection invite",
+      "credentials": {
+        "browserflowApi": {
+          "id": "6Mmtu4mdSvTDoTaw",
+          "name": "Browserflow account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        124
+      ],
+      "id": "86d8a0e0-8b2c-45cd-b02d-22e5a1bf5031",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 50
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2144,
+        124
+      ],
+      "id": "a0278348-06fa-4b64-9493-73ea4a2e4a8c",
+      "name": "Wait",
+      "webhookId": "f15cbde0-7bf9-4a31-89ee-174a232a003f"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ATdEZq7p1v1EUjMhhXwCWom4iJUthnOP31JN3OT1ywc",
+          "mode": "list",
+          "cachedResultName": "linkdin",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ATdEZq7p1v1EUjMhhXwCWom4iJUthnOP31JN3OT1ywc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ATdEZq7p1v1EUjMhhXwCWom4iJUthnOP31JN3OT1ywc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Linkdin Url": "{{ $('Get row(s) in sheet').item.json['Linkdin Url'] }}",
+            "Linkdin Connection sent": "YES"
+          },
+          "matchingColumns": [
+            "Linkdin Url"
+          ],
+          "schema": [
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Linkdin Url",
+              "displayName": "Linkdin Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Linkdin Connection sent",
+              "displayName": "Linkdin Connection sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1920,
+        0
+      ],
+      "id": "35df7798-4b97-4dd1-9394-4664e0316542",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zAQeNVIFDkpvkCLp",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Get row(s) in sheet": [
+      {
+        "json": {
+          "row_number": 2,
+          "First Name": "Shivani",
+          "Last Name": "Pradhan",
+          "Linkdin Url": "https://www.linkedin.com/in/shivani-priyadarshini/",
+          "Linkdin Connection sent": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 3,
+          "First Name": "Venkatesh",
+          "Last Name": "Bagde",
+          "Linkdin Url": "https://www.linkedin.com/in/venkateshbagde/",
+          "Linkdin Connection sent": ""
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if a person is a connection": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get data from a linkedin profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get data from a linkedin profile": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a linked in connection invite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Check if a person is a connection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a linked in connection invite": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "70f15e75-9049-44fe-802b-217bfcdd759b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e959e6a6d3adadf49c13e811e758ef261c542e206e593be93e9d74d48983a610"
+  },
+  "id": "ygqxx8CEUDXuLec3",
+  "tags": []
+}
